@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Become a service professional · KaamPaao{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+
+{% block content %}
+<div class="auth-layout">
+    {% include "_brand_panel.html" %}
+
+    <section class="form-region" aria-labelledby="auth-heading-provider">
+        <div class="form-card">
+            <h2 id="auth-heading-provider" class="form-heading">Become a service professional</h2>
+            <p class="form-sub">Create your provider account. After signing up, complete your profile and upload documents for verification.</p>
+
+            <form id="login-form-phone"
+                  method="post"
+                  action="{{ url_for('provider_signup') }}"
+                  novalidate
+                  class="auth-form"
+                  data-form="signup">
+                {{ signup_form.csrf_token }}
+
+                <div class="field {% if signup_form.name.errors %}has-error{% endif %}">
+                    <label for="provider-name">Full name</label>
+                    <input type="text" id="provider-name" name="name"
+                           value="{{ signup_form.name.data or '' }}"
+                           autocomplete="name" required minlength="2" maxlength="80">
+                    {% if signup_form.name.errors %}
+                        <p class="field-error" role="alert">{{ signup_form.name.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="field {% if signup_form.email.errors %}has-error{% endif %}">
+                    <label for="provider-email">Email</label>
+                    <input type="email" id="provider-email" name="email"
+                           value="{{ signup_form.email.data or '' }}"
+                           autocomplete="email" required maxlength="254">
+                    {% if signup_form.email.errors %}
+                        <p class="field-error" role="alert">{{ signup_form.email.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="field {% if signup_form.phone.errors %}has-error{% endif %}" data-phone-field>
+                    <label for="provider-phone">Mobile number</label>
+                    <div class="phone-input">
+                        <span class="phone-prefix" aria-hidden="true">+91</span>
+                        <input type="tel" id="provider-phone" name="phone_local"
+                               inputmode="numeric" pattern="[6-9][0-9]{9}"
+                               autocomplete="tel-national" maxlength="10" required
+                               placeholder="98XXXXXXXX"
+                               value="{{ (signup_form.phone.data or '')[3:] if signup_form.phone.data and signup_form.phone.data.startswith('+91') else (signup_form.phone.data or '') }}">
+                        <button type="button" class="phone-verify-btn"
+                                data-send-otp="signup_verify">Verify</button>
+                    </div>
+                    <input type="hidden" name="phone" data-phone-e164
+                           value="{{ signup_form.phone.data or '' }}">
+                    <p class="field-help">We'll text you a 6-digit code to verify.</p>
+                    <p class="field-error" data-phone-error role="alert" hidden></p>
+                    {% if signup_form.phone.errors %}
+                        <p class="field-error" role="alert">{{ signup_form.phone.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="otp-block" data-otp-block hidden>
+                    <div class="field">
+                        <label for="signup-otp">Enter the 6-digit code</label>
+                        <div class="input-with-action">
+                            <input type="text" id="signup-otp"
+                                   inputmode="numeric" pattern="[0-9]{6}"
+                                   autocomplete="one-time-code"
+                                   maxlength="6">
+                            <button type="button" class="input-action"
+                                    data-verify-otp="signup_verify">Verify</button>
+                        </div>
+                        <p class="field-help" data-otp-status></p>
+                    </div>
+                    <p class="form-footer">
+                        <a href="#" data-resend-otp="signup_verify">Didn't get it? Resend</a>
+                    </p>
+                </div>
+
+                <div class="phone-verified" data-phone-verified hidden>
+                    <span aria-hidden="true">&#x2713;</span> Phone verified.
+                    <button type="button" class="link-button" data-change-phone>Change</button>
+                </div>
+
+                <button type="submit" class="btn-primary" data-submit data-needs-phone-verified>
+                    <span class="btn-label">Create Provider Account</span>
+                </button>
+            </form>
+
+            <p class="form-footer">
+                Looking to book services? <a href="{{ url_for('signup') }}">Create a customer account</a>
+            </p>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/auth.js') }}" defer></script>
+{% endblock %}

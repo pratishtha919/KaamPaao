@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import secrets; print\\(secrets.token_hex\\(32\\)\\)\")",
+      "Read(//tmp/**)",
+      "Bash(sed -i \"s|^SECRET_KEY=.*$|SECRET_KEY=$\\(cat /tmp/sk\\)|\" .env)",
+      "Bash(rm /tmp/sk)",
+      "Bash(cp -n .env.example .env)",
+      "Bash(python3 -c \"import secrets; print\\(secrets.token_hex\\(32\\)\\)\")",
+      "Bash(curl -fsS -o /dev/null -w \"\" http://127.0.0.1:5000/login)",
+      "Bash(curl -sI http://127.0.0.1:5000/)",
+      "Bash(curl -s http://127.0.0.1:5000/login)",
+      "Bash(curl -sI http://127.0.0.1:5000/static/css/styles.css)",
+      "Bash(curl -s http://127.0.0.1:5000/static/manifest.webmanifest)",
+      "Bash(curl -fsS -o /dev/null http://127.0.0.1:5000/login)",
+      "Bash(curl -sI http://127.0.0.1:5000/static/js/auth.js)"
+    ]
+  }
+}

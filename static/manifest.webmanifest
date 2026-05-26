@@ -1,0 +1,20 @@
+{
+    "name": "KaamPaao",
+    "short_name": "KaamPaao",
+    "description": "Local services, on demand.",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#F9FAFB",
+    "theme_color": "#FF6B35",
+    "lang": "en",
+    "icons": [
+        {
+            "src": "/static/img/logo.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        }
+    ]
+}

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Documents · Provider · KaamPaao{% endblock %}
+{% block body_class %}provider-page{% endblock %}
+
+{% block content %}
+<div class="provider-shell">
+    <header class="provider-header">
+        <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="KaamPaao" width="140" height="28">
+        <nav class="provider-nav" aria-label="Provider navigation">
+            <a href="{{ url_for('dashboard_provider') }}">&larr; Dashboard</a>
+            <a href="{{ url_for('provider_profile') }}">&larr; Profile</a>
+        </nav>
+    </header>
+
+    <section class="provider-body">
+        <h1>Your documents</h1>
+        <p class="dashboard-hint">Max 5 MB per file. JPG, PNG, or PDF.</p>
+        {% if trade_cert_required %}
+            <p class="banner-info">A trade certificate is required for the categories you selected (electrical / plumbing).</p>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" class="auth-form provider-form" novalidate>
+            {{ docs_form.csrf_token }}
+
+            {% for kind in doc_kinds %}
+                {% set doc = docs.get(kind) %}
+                {% set is_required = kind in required_kinds %}
+                <div class="doc-field {% if docs_form[kind].errors %}has-error{% endif %}">
+                    <div class="doc-field-head">
+                        <label for="{{ kind }}">
+                            {{ doc_labels[kind] }}
+                            {% if is_required %}<span class="required-mark" title="Required">*</span>{% endif %}
+                        </label>
+                        {% if doc %}
+                            <span class="doc-status doc-status-uploaded" aria-label="Uploaded">
+                                &#x2713; Uploaded
+                            </span>
+                        {% endif %}
+                    </div>
+                    {% if doc %}
+                        <div class="doc-preview">
+                            {% if doc.mime_type.startswith('image/') %}
+                                <img src="{{ url_for('serve_provider_doc', doc_id=doc.id) }}"
+                                     alt="{{ doc_labels[kind] }}" loading="lazy">
+                            {% else %}
+                                <a href="{{ url_for('serve_provider_doc', doc_id=doc.id) }}"
+                                   target="_blank" rel="noopener" class="doc-pdf-link">
+                                    {{ doc.original_name }} ({{ (doc.size_bytes / 1024)|round(0)|int }} KB)
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    <input type="file" id="{{ kind }}" name="{{ kind }}"
+                           accept=".jpg,.jpeg,.png,.pdf"
+                           class="file-input">
+                    <p class="field-help">{{ doc.original_name if doc else 'No file uploaded yet.' }}</p>
+                    {% if docs_form[kind].errors %}
+                        <p class="field-error" role="alert">{{ docs_form[kind].errors[0] }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <button type="submit" class="btn-primary">
+                <span class="btn-label">Save uploads</span>
+            </button>
+        </form>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Provider · KaamPaao{% endblock %}
+{% block body_class %}provider-page{% endblock %}
+
+{% block content %}
+<div class="provider-shell">
+    <header class="provider-header">
+        <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="KaamPaao" width="140" height="28">
+        <form method="post" action="{{ url_for('logout') }}" class="logout-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn-secondary">Log out</button>
+        </form>
+    </header>
+
+    <section class="provider-body">
+        <div class="provider-greeting">
+            <h1>Hello, {{ user.name }}</h1>
+            <span class="status-pill status-{{ user.status }}">
+                {% if user.status == 'incomplete' %}Incomplete
+                {% elif user.status == 'pending' %}Awaiting review
+                {% elif user.status == 'approved' %}Approved
+                {% elif user.status == 'rejected' %}Rejected
+                {% elif user.status == 'needs_info' %}More info needed
+                {% endif %}
+            </span>
+        </div>
+
+        {% if user.status == 'incomplete' %}
+            <p class="dashboard-hint">Finish these steps to send your application for review.</p>
+            <ul class="checklist">
+                <li class="checklist-item {{ 'is-done' if profile_complete else 'is-todo' }}">
+                    {% if profile_complete %}&#x2713;{% else %}&#x2022;{% endif %}
+                    <a href="{{ url_for('provider_profile') }}">Complete your profile</a>
+                    {% if not profile_complete %}<span class="checklist-note">(personal, identity, bank, professional)</span>{% endif %}
+                </li>
+                {% for kind in required_kinds %}
+                    <li class="checklist-item {{ 'is-done' if kind in docs else 'is-todo' }}">
+                        {% if kind in docs %}&#x2713;{% else %}&#x2022;{% endif %}
+                        <a href="{{ url_for('provider_documents') }}">Upload {{ doc_labels[kind]|lower }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+            <form method="post" action="{{ url_for('provider_submit') }}" class="submit-application">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-primary" {% if not can_submit %}disabled{% endif %}>
+                    Submit application
+                </button>
+                {% if not can_submit %}
+                    <p class="field-help">All checklist items must be complete before you can submit.</p>
+                {% endif %}
+            </form>
+
+        {% elif user.status == 'pending' %}
+            <div class="banner-info">
+                Your application is awaiting review. You'll see the outcome here when an admin decides.
+            </div>
+            <h2 class="section-heading">Submitted details</h2>
+            {% include 'provider/_summary.html' %}
+
+        {% elif user.status == 'approved' %}
+            <div class="banner-success">
+                You're approved. Bookings will appear here when the booking flow ships.
+            </div>
+            <h2 class="section-heading">Your profile</h2>
+            {% include 'provider/_summary.html' %}
+
+        {% elif user.status in ('rejected', 'needs_info') %}
+            <div class="banner-warning">
+                <strong>
+                    {% if user.status == 'rejected' %}Application rejected.{% else %}More information requested.{% endif %}
+                </strong>
+                {% if note %}
+                    <p>{{ note }}</p>
+                {% endif %}
+            </div>
+            <p>
+                <a href="{{ url_for('provider_profile') }}" class="btn-secondary">Edit profile</a>
+                <a href="{{ url_for('provider_documents') }}" class="btn-secondary">Edit documents</a>
+            </p>
+            <form method="post" action="{{ url_for('provider_submit') }}" class="submit-application">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-primary" {% if not can_submit %}disabled{% endif %}>
+                    Resubmit application
+                </button>
+                {% if not can_submit %}
+                    <p class="field-help">Fix the issues above and complete every item before resubmitting.</p>
+                {% endif %}
+            </form>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

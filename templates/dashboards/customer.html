@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Customer · KaamPaao{% endblock %}
+{% block body_class %}dashboard-page{% endblock %}
+{% block content %}
+<div class="dashboard">
+    <header class="dashboard-header">
+        <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="KaamPaao" width="140" height="28">
+        <form method="post" action="{{ url_for('logout') }}" class="logout-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn-secondary">Log out</button>
+        </form>
+    </header>
+    <section class="dashboard-body">
+        <h1>Welcome, {{ user.name }}</h1>
+        <p class="role-pill role-customer">Customer</p>
+        <p class="dashboard-hint">Your booking dashboard will appear here. Browse categories, pick a service, and schedule a slot — coming soon.</p>
+    </section>
+</div>
+{% endblock %}

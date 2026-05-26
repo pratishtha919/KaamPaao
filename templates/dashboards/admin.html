@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Admin · KaamPaao{% endblock %}
+{% block body_class %}dashboard-page{% endblock %}
+{% block content %}
+<div class="dashboard">
+    <header class="dashboard-header">
+        <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="KaamPaao" width="140" height="28">
+        <form method="post" action="{{ url_for('logout') }}" class="logout-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn-secondary">Log out</button>
+        </form>
+    </header>
+    <section class="dashboard-body">
+        <h1>Welcome, {{ user.name }}</h1>
+        <p class="role-pill role-admin">Admin</p>
+        <p class="dashboard-hint">User and provider management tools will live here.</p>
+        <p>
+            <a class="btn-secondary" href="{{ url_for('admin_providers_list') }}">
+                Provider applications{% if pending_count %} ({{ pending_count }} pending){% endif %}
+            </a>
+        </p>
+    </section>
+</div>
+{% endblock %}

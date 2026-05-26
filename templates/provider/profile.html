@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Profile · Provider · KaamPaao{% endblock %}
+{% block body_class %}provider-page{% endblock %}
+
+{% block content %}
+<div class="provider-shell">
+    <header class="provider-header">
+        <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="KaamPaao" width="140" height="28">
+        <nav class="provider-nav" aria-label="Provider navigation">
+            <a href="{{ url_for('dashboard_provider') }}">&larr; Dashboard</a>
+            <a href="{{ url_for('provider_documents') }}">Documents &rarr;</a>
+        </nav>
+    </header>
+
+    <section class="provider-body">
+        <h1>Your profile</h1>
+        <p class="dashboard-hint">Fill these once. Admin will review along with your documents.</p>
+
+        <form method="post" novalidate class="auth-form provider-form">
+            {{ profile_form.csrf_token }}
+
+            <fieldset class="form-fieldset">
+                <legend>Personal</legend>
+                <div class="field {% if profile_form.dob.errors %}has-error{% endif %}">
+                    <label for="dob">Date of birth</label>
+                    <input type="date" id="dob" name="dob"
+                           value="{{ profile_form.dob.data.isoformat() if profile_form.dob.data else '' }}"
+                           required max="{{ today_iso if today_iso else '' }}">
+                    {% if profile_form.dob.errors %}<p class="field-error" role="alert">{{ profile_form.dob.errors[0] }}</p>{% endif %}
+                </div>
+                <div class="field {% if profile_form.address_street.errors %}has-error{% endif %}">
+                    <label for="address_street">Street address</label>
+                    <input type="text" id="address_street" name="address_street"
+                           value="{{ profile_form.address_street.data or '' }}" required maxlength="200">
+                    {% if profile_form.address_street.errors %}<p class="field-error" role="alert">{{ profile_form.address_street.errors[0] }}</p>{% endif %}
+                </div>
+                <div class="field-row">
+                    <div class="field {% if profile_form.address_city.errors %}has-error{% endif %}">
+                        <label for="address_city">City</label>
+                        <input type="text" id="address_city" name="address_city"
+                               value="{{ profile_form.address_city.data or '' }}" required maxlength="80">
+                        {% if profile_form.address_city.errors %}<p class="field-error" role="alert">{{ profile_form.address_city.errors[0] }}</p>{% endif %}
+                    </div>
+                    <div class="field {% if profile_form.address_state.errors %}has-error{% endif %}">
+                        <label for="address_state">State</label>
+                        <input type="text" id="address_state" name="address_state"
+                               value="{{ profile_form.address_state.data or '' }}" required maxlength="80">
+                        {% if profile_form.address_state.errors %}<p class="field-error" role="alert">{{ profile_form.address_state.errors[0] }}</p>{% endif %}
+                    </div>
+                    <div class="field {% if profile_form.address_pincode.errors %}has-error{% endif %}">
+                        <label for="address_pincode">Pincode</label>
+                        <input type="text" id="address_pincode" name="address_pincode"
+                               value="{{ profile_form.address_pincode.data or '' }}"
+                               inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required>
+                        {% if profile_form.address_pincode.errors %}<p class="field-error" role="alert">{{ profile_form.address_pincode.errors[0] }}</p>{% endif %}
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="form-fieldset">
+                <legend>Identity</legend>
+                <div class="field {% if profile_form.aadhaar_number.errors %}has-error{% endif %}">
+                    <label for="aadhaar_number">Aadhaar number</label>
+                    <input type="text" id="aadhaar_number" name="aadhaar_number"
+                           value="{{ profile_form.aadhaar_number.data or '' }}"
+                           inputmode="numeric" pattern="[0-9]{12}" maxlength="12" required>
+                    <p class="field-help">12-digit number; basic length check only. Full Verhoeff validation not enforced.</p>
+                    {% if profile_form.aadhaar_number.errors %}<p class="field-error" role="alert">{{ profile_form.aadhaar_number.errors[0] }}</p>{% endif %}
+                </div>
+                <div class="field {% if profile_form.pan_number.errors %}has-error{% endif %}">
+                    <label for="pan_number">PAN number</label>
+                    <input type="text" id="pan_number" name="pan_number"
+                           value="{{ profile_form.pan_number.data or '' }}"
+                           pattern="[A-Z]{5}[0-9]{4}[A-Z]" maxlength="10" required
+                           style="text-transform: uppercase">
+                    <p class="field-help">Format: ABCDE1234F.</p>
+                    {% if profile_form.pan_number.errors %}<p class="field-error" role="alert">{{ profile_form.pan_number.errors[0] }}</p>{% endif %}
+                </div>
+            </fieldset>
+
+            <fieldset class="form-fieldset">
+                <legend>Bank account (for payouts)</legend>
+                <div class="field {% if profile_form.bank_holder.errors %}has-error{% endif %}">
+                    <label for="bank_holder">Account holder name</label>
+                    <input type="text" id="bank_holder" name="bank_holder"
+                           value="{{ profile_form.bank_holder.data or '' }}" required maxlength="80">
+                    {% if profile_form.bank_holder.errors %}<p class="field-error" role="alert">{{ profile_form.bank_holder.errors[0] }}</p>{% endif %}
+                </div>
+                <div class="field-row">
+                    <div class="field {% if profile_form.bank_account.errors %}has-error{% endif %}">
+                        <label for="bank_account">Account number</label>
+                        <input type="text" id="bank_account" name="bank_account"
+                               value="{{ profile_form.bank_account.data or '' }}"
+                               inputmode="numeric" pattern="[0-9]{9,18}" maxlength="18" required>
+                        {% if profile_form.bank_account.errors %}<p class="field-error" role="alert">{{ profile_form.bank_account.errors[0] }}</p>{% endif %}
+                    </div>
+                    <div class="field {% if profile_form.bank_ifsc.errors %}has-error{% endif %}">
+                        <label for="bank_ifsc">IFSC</label>
+                        <input type="text" id="bank_ifsc" name="bank_ifsc"
+                               value="{{ profile_form.bank_ifsc.data or '' }}"
+                               pattern="[A-Z]{4}0[A-Z0-9]{6}" maxlength="11" required
+                               style="text-transform: uppercase">
+                        {% if profile_form.bank_ifsc.errors %}<p class="field-error" role="alert">{{ profile_form.bank_ifsc.errors[0] }}</p>{% endif %}
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="form-fieldset">
+                <legend>Professional</legend>
+                <div class="field {% if profile_form.categories.errors %}has-error{% endif %}">
+                    <label>Service categories <span class="field-help-inline">(select all that apply)</span></label>
+                    <div class="checkbox-grid">
+                        {% for key, label in profile_form.categories.choices %}
+                            <label class="checkbox-tile">
+                                <input type="checkbox" name="categories" value="{{ key }}"
+                                       {% if key in (profile_form.categories.data or []) %}checked{% endif %}>
+                                <span>{{ label }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                    {% if profile_form.categories.errors %}<p class="field-error" role="alert">{{ profile_form.categories.errors[0] }}</p>{% endif %}
+                </div>
+                <div class="field {% if profile_form.sub_skills.errors %}has-error{% endif %}">
+                    <label for="sub_skills">Sub-skills (optional)</label>
+                    <input type="text" id="sub_skills" name="sub_skills"
+                           value="{{ profile_form.sub_skills.data or '' }}" maxlength="200"
+                           placeholder="e.g. tap repair, drainage cleaning">
+                    {% if profile_form.sub_skills.errors %}<p class="field-error" role="alert">{{ profile_form.sub_skills.errors[0] }}</p>{% endif %}
+                </div>
+                <div class="field-row">
+                    <div class="field {% if profile_form.years_experience.errors %}has-error{% endif %}">
+                        <label for="years_experience">Years of experience</label>
+                        <input type="number" id="years_experience" name="years_experience"
+                               value="{{ profile_form.years_experience.data if profile_form.years_experience.data is not none else '' }}"
+                               min="0" max="60" required>
+                        {% if profile_form.years_experience.errors %}<p class="field-error" role="alert">{{ profile_form.years_experience.errors[0] }}</p>{% endif %}
+                    </div>
+                    <div class="field {% if profile_form.service_pincodes.errors %}has-error{% endif %}">
+                        <label for="service_pincodes">Service-area pincodes</label>
+                        <input type="text" id="service_pincodes" name="service_pincodes"
+                               value="{{ profile_form.service_pincodes.data or '' }}" required
+                               placeholder="e.g. 110001, 110002">
+                        {% if profile_form.service_pincodes.errors %}<p class="field-error" role="alert">{{ profile_form.service_pincodes.errors[0] }}</p>{% endif %}
+                    </div>
+                </div>
+                <div class="field {% if profile_form.bio.errors %}has-error{% endif %}">
+                    <label for="bio">Short bio</label>
+                    <textarea id="bio" name="bio" maxlength="500" rows="4" required>{{ profile_form.bio.data or '' }}</textarea>
+                    <p class="field-help">Max 500 characters.</p>
+                    {% if profile_form.bio.errors %}<p class="field-error" role="alert">{{ profile_form.bio.errors[0] }}</p>{% endif %}
+                </div>
+            </fieldset>
+
+            <button type="submit" class="btn-primary">
+                <span class="btn-label">Save profile</span>
+            </button>
+        </form>
+    </section>
+</div>
+{% endblock %}

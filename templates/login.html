@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Log in · KaamPaao{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+
+{% block content %}
+<div class="auth-layout">
+    {% include "_brand_panel.html" %}
+
+    <section class="form-region" aria-labelledby="auth-heading-login">
+        <div class="form-card">
+            <h2 id="auth-heading-login" class="form-heading">Welcome back</h2>
+            <p class="form-sub">Log in with your mobile number.</p>
+
+            <form id="login-form-phone"
+                  method="post"
+                  action="{{ url_for('login_otp') }}"
+                  novalidate
+                  class="auth-form"
+                  data-form="login-otp">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="field" data-phone-field>
+                    <label for="login-phone">Mobile number</label>
+                    <div class="phone-input">
+                        <span class="phone-prefix" aria-hidden="true">+91</span>
+                        <input type="tel" id="login-phone" name="phone_local"
+                               inputmode="numeric" pattern="[6-9][0-9]{9}"
+                               autocomplete="tel-national"
+                               maxlength="10" required placeholder="98XXXXXXXX">
+                    </div>
+                    <input type="hidden" name="phone" data-phone-e164>
+                    <p class="field-help">10-digit Indian mobile. We'll text you a code.</p>
+                </div>
+
+                <button type="button"
+                        class="btn-primary btn-block"
+                        data-send-otp="login">Send OTP</button>
+
+                <div class="otp-block" data-otp-block hidden>
+                    <div class="field">
+                        <label for="login-otp">Enter the 6-digit code</label>
+                        <input type="text" id="login-otp" name="code"
+                               inputmode="numeric" pattern="[0-9]{6}"
+                               autocomplete="one-time-code"
+                               maxlength="6" required>
+                        <p class="field-help" data-otp-status></p>
+                    </div>
+                    <button type="submit" class="btn-primary" data-submit>
+                        <span class="btn-label">Log In</span>
+                    </button>
+                    <p class="form-footer">
+                        <a href="#" data-resend-otp="login">Didn't get it? Resend</a>
+                    </p>
+                </div>
+            </form>
+
+            <p class="form-footer">
+                New here? <a href="{{ url_for('signup') }}">Create an account</a>
+            </p>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/auth.js') }}" defer></script>
+{% endblock %}

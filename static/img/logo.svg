@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 36" role="img" aria-label="KaamPaao">
+  <g fill="currentColor" font-family="Inter, -apple-system, Segoe UI, Roboto, sans-serif">
+    <circle cx="18" cy="18" r="14" fill="#FF6B35"/>
+    <path d="M11 11 L11 25 M11 18 L18 11 M11 18 L18 25" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <text x="40" y="24" font-size="20" font-weight="700" letter-spacing="-0.4">KaamPaao</text>
+  </g>
+</svg>

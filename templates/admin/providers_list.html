@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Provider applications · Admin · KaamPaao{% endblock %}
+{% block body_class %}admin-page{% endblock %}
+
+{% block content %}
+<div class="admin-shell">
+    <header class="admin-header">
+        <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="KaamPaao" width="140" height="28">
+        <nav class="admin-nav">
+            <a href="{{ url_for('dashboard_admin') }}">&larr; Admin dashboard</a>
+        </nav>
+        <form method="post" action="{{ url_for('logout') }}" class="logout-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn-secondary">Log out</button>
+        </form>
+    </header>
+
+    <section class="admin-body">
+        <h1>Provider applications</h1>
+
+        <nav class="tabs" role="tablist" aria-label="Filter by status">
+            {% for value, label in [('pending','Pending'),
+                                    ('needs_info','Needs info'),
+                                    ('rejected','Rejected'),
+                                    ('approved','Approved'),
+                                    ('all','All')] %}
+                <a href="?status={{ value }}"
+                   class="tab {% if status_filter == value %}is-active{% endif %}"
+                   role="tab"
+                   aria-selected="{{ 'true' if status_filter == value else 'false' }}">{{ label }}</a>
+            {% endfor %}
+        </nav>
+
+        {% if not items %}
+            <p class="dashboard-hint">No applications in this view.</p>
+        {% else %}
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Categories</th>
+                        <th>Submitted</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for it in items %}
+                        <tr>
+                            <td>{{ it.name }}</td>
+                            <td>{{ it.phone }}</td>
+                            <td>{{ it.categories|join(', ') or '—' }}</td>
+                            <td>{{ it.submitted_at or '—' }}</td>
+                            <td><span class="status-pill status-{{ it.status }}">{{ it.status }}</span></td>
+                            <td><a href="{{ url_for('admin_provider_detail', user_id=it.id) }}">View</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

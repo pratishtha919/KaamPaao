@@ -1,0 +1,33 @@
+{% if profile %}
+    <dl class="kv-grid">
+        <dt>Name</dt><dd>{{ user.name }}</dd>
+        <dt>Phone</dt><dd>{{ user.phone }}</dd>
+        <dt>Email</dt><dd>{{ user.email }}</dd>
+        <dt>Date of birth</dt><dd>{{ profile.dob }}</dd>
+        <dt>Address</dt><dd>{{ profile.address_street }}, {{ profile.address_city }}, {{ profile.address_state }} {{ profile.address_pincode }}</dd>
+        <dt>Aadhaar</dt><dd>{{ profile.aadhaar_number }}</dd>
+        <dt>PAN</dt><dd>{{ profile.pan_number }}</dd>
+        <dt>Bank</dt><dd>{{ profile.bank_holder }} &middot; {{ profile.bank_account }} &middot; {{ profile.bank_ifsc }}</dd>
+        <dt>Categories</dt><dd>{{ categories|join(', ') }}</dd>
+        {% if profile.sub_skills %}<dt>Sub-skills</dt><dd>{{ profile.sub_skills }}</dd>{% endif %}
+        <dt>Experience</dt><dd>{{ profile.years_experience }} years</dd>
+        <dt>Service pincodes</dt><dd>{{ service_pincodes|join(', ') }}</dd>
+        <dt>Bio</dt><dd>{{ profile.bio }}</dd>
+    </dl>
+    <h3 class="section-heading">Uploaded documents</h3>
+    <ul class="doc-list">
+        {% for kind in required_kinds %}
+            {% set doc = docs.get(kind) %}
+            <li>
+                <strong>{{ doc_labels[kind] }}:</strong>
+                {% if doc %}
+                    <a href="{{ url_for('serve_provider_doc', doc_id=doc.id) }}" target="_blank" rel="noopener">{{ doc.original_name }}</a>
+                {% else %}
+                    <span class="text-muted">Not uploaded</span>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No profile saved yet.</p>
+{% endif %}
