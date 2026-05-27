@@ -15,10 +15,7 @@
 
     <section class="provider-body">
         <h1>Your documents</h1>
-        <p class="dashboard-hint">Max 5 MB per file. JPG, PNG, or PDF.</p>
-        {% if trade_cert_required %}
-            <p class="banner-info">A trade certificate is required for the categories you selected (electrical / plumbing).</p>
-        {% endif %}
+        <p class="dashboard-hint">Max 5 MB per file. JPG, PNG, or PDF. Only profile photo and Aadhaar card are required to submit; other documents are optional.</p>
 
         <form method="post" enctype="multipart/form-data" class="auth-form provider-form" novalidate>
             {{ docs_form.csrf_token }}

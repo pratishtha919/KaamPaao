@@ -29,6 +29,8 @@ CREATE INDEX IF NOT EXISTS idx_otp_phone_purpose ON otp_codes(phone, purpose);
 CREATE TABLE IF NOT EXISTS provider_profiles (
     user_id               INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     dob                   DATE,
+    gender                TEXT CHECK (gender IN ('male','female','other','prefer_not_to_say')),
+    job_role              TEXT,
     address_street        TEXT,
     address_city          TEXT,
     address_state         TEXT,

@@ -28,14 +28,20 @@
             <dt>Phone</dt><dd>{{ provider.phone }}</dd>
             {% if profile %}
                 <dt>Date of birth</dt><dd>{{ profile.dob }}</dd>
-                <dt>Address</dt><dd>{{ profile.address_street }}, {{ profile.address_city }}, {{ profile.address_state }} {{ profile.address_pincode }}</dd>
+                <dt>Gender</dt><dd>{{ profile.gender|replace('_', ' ')|title if profile.gender else '—' }}</dd>
                 <dt>Aadhaar</dt><dd>{{ profile.aadhaar_number }}</dd>
                 <dt>PAN</dt><dd>{{ profile.pan_number }}</dd>
-                <dt>Bank</dt><dd>{{ profile.bank_holder }} &middot; {{ profile.bank_account }} &middot; {{ profile.bank_ifsc }}</dd>
+                <dt>Job role</dt><dd>{{ profile.job_role or '—' }}</dd>
+                <dt>Experience</dt><dd>{{ profile.years_experience }} years</dd>
+                <dt>Address</dt><dd>{{ profile.address_street }}, {{ profile.address_city }}, {{ profile.address_state }} {{ profile.address_pincode }}</dd>
                 <dt>Categories</dt><dd>{{ categories|join(', ') }}</dd>
                 {% if profile.sub_skills %}<dt>Sub-skills</dt><dd>{{ profile.sub_skills }}</dd>{% endif %}
-                <dt>Experience</dt><dd>{{ profile.years_experience }} years</dd>
                 <dt>Service pincodes</dt><dd>{{ service_pincodes|join(', ') }}</dd>
+                <dt>Bank</dt><dd>
+                    {% if profile.bank_holder or profile.bank_account or profile.bank_ifsc %}
+                        {{ profile.bank_holder or '—' }} &middot; {{ profile.bank_account or '—' }} &middot; {{ profile.bank_ifsc or '—' }}
+                    {% else %}<span class="text-muted">Not provided</span>{% endif %}
+                </dd>
                 <dt>Bio</dt><dd>{{ profile.bio }}</dd>
             {% endif %}
         </dl>

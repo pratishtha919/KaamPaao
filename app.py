@@ -56,6 +56,7 @@ from wtforms import (
     DateField,
     IntegerField,
     RadioField,
+    SelectField,
     SelectMultipleField,
     StringField,
     TextAreaField,
@@ -85,7 +86,14 @@ SERVICE_CATEGORIES = [
     ("repairs", "Repairs"),
 ]
 CATEGORY_KEYS = {k for k, _ in SERVICE_CATEGORIES}
-TRADE_CERT_CATEGORIES = {"plumbing", "electrical"}
+
+GENDER_CHOICES = [
+    ("male", "Male"),
+    ("female", "Female"),
+    ("other", "Other"),
+    ("prefer_not_to_say", "Prefer not to say"),
+]
+GENDER_KEYS = {k for k, _ in GENDER_CHOICES}
 
 DOC_KINDS = (
     "profile_photo", "aadhaar_image", "pan_image",
@@ -100,15 +108,18 @@ DOC_LABELS = {
     "trade_certificate": "Trade certificate",
 }
 REQUIRED_DOC_KINDS = (
-    "profile_photo", "aadhaar_image", "pan_image",
-    "address_proof", "cancelled_cheque",
+    "profile_photo", "aadhaar_image",
 )
 
 PROFILE_REQUIRED_COLUMNS = (
-    "dob", "address_street", "address_city", "address_state", "address_pincode",
-    "aadhaar_number", "pan_number", "bank_holder", "bank_account", "bank_ifsc",
+    "dob", "gender", "job_role",
+    "address_street", "address_city", "address_state", "address_pincode",
+    "aadhaar_number", "pan_number",
     "years_experience", "bio",
 )
+
+NAME_REGEX = r"^[A-Za-z][A-Za-z\s]*$"
+NAME_MESSAGE = "Letters and spaces only."
 
 
 # --- App setup --------------------------------------------------------------
@@ -242,27 +253,13 @@ def _profile_complete(profile: sqlite3.Row | None) -> bool:
     return True
 
 
-def _trade_cert_required(profile: sqlite3.Row | None) -> bool:
-    if not profile:
-        return False
-    cats = set(_decode_list(profile["categories_json"]))
-    return bool(cats & TRADE_CERT_CATEGORIES)
-
-
-def _required_doc_kinds(profile: sqlite3.Row | None) -> tuple[str, ...]:
-    base = REQUIRED_DOC_KINDS
-    if _trade_cert_required(profile):
-        return base + ("trade_certificate",)
-    return base
-
-
-def _missing_docs(user_id: int, profile: sqlite3.Row | None) -> list[str]:
+def _missing_docs(user_id: int) -> list[str]:
     have = _get_provider_docs_by_kind(user_id)
-    return [k for k in _required_doc_kinds(profile) if k not in have]
+    return [k for k in REQUIRED_DOC_KINDS if k not in have]
 
 
 def _can_submit(user_id: int, profile: sqlite3.Row | None) -> bool:
-    return _profile_complete(profile) and not _missing_docs(user_id, profile)
+    return _profile_complete(profile) and not _missing_docs(user_id)
 
 
 # --- Forms ------------------------------------------------------------------
@@ -270,8 +267,12 @@ def _can_submit(user_id: int, profile: sqlite3.Row | None) -> bool:
 class SignupForm(FlaskForm):
     name = StringField(
         "Full Name",
-        validators=[DataRequired(), Length(min=2, max=80)],
-        filters=[lambda v: v.strip() if isinstance(v, str) else v],
+        validators=[
+            DataRequired(),
+            Length(min=2, max=80),
+            Regexp(NAME_REGEX, message=NAME_MESSAGE),
+        ],
+        filters=[lambda v: " ".join(v.split()) if isinstance(v, str) else v],
     )
     email = StringField(
         "Email",
@@ -299,8 +300,12 @@ class SignupForm(FlaskForm):
 class ProviderSignupForm(FlaskForm):
     name = StringField(
         "Full Name",
-        validators=[DataRequired(), Length(min=2, max=80)],
-        filters=[lambda v: v.strip() if isinstance(v, str) else v],
+        validators=[
+            DataRequired(),
+            Length(min=2, max=80),
+            Regexp(NAME_REGEX, message=NAME_MESSAGE),
+        ],
+        filters=[lambda v: " ".join(v.split()) if isinstance(v, str) else v],
     )
     email = StringField(
         "Email",
@@ -349,7 +354,37 @@ def _validate_service_pincodes(_form, field) -> None:
 
 
 class ProviderProfileForm(FlaskForm):
+    # Private details
     dob = DateField("Date of birth", validators=[DataRequired(), _validate_adult])
+    gender = SelectField(
+        "Gender",
+        choices=GENDER_CHOICES,
+        validators=[DataRequired()],
+    )
+    aadhaar_number = StringField(
+        "Aadhaar number",
+        validators=[DataRequired(), Regexp(r"^\d{12}$",
+                    message="Must be a 12-digit number.")],
+        filters=[lambda v: "".join(ch for ch in v if ch.isdigit())
+                 if isinstance(v, str) else v],
+    )
+    pan_number = StringField(
+        "PAN number",
+        validators=[DataRequired(), Regexp(r"^[A-Z]{5}[0-9]{4}[A-Z]$",
+                    message="Format: ABCDE1234F.")],
+        filters=[lambda v: v.strip().upper() if isinstance(v, str) else v],
+    )
+
+    # Professional info
+    job_role = StringField(
+        "Job role",
+        validators=[DataRequired(), Length(min=2, max=80)],
+        filters=[lambda v: v.strip() if isinstance(v, str) else v],
+    )
+    years_experience = IntegerField(
+        "Experience (years)",
+        validators=[DataRequired(), NumberRange(min=0, max=60)],
+    )
     address_street = StringField(
         "Street address",
         validators=[DataRequired(), Length(max=200)],
@@ -371,37 +406,6 @@ class ProviderProfileForm(FlaskForm):
                     message="Must be a 6-digit Indian pincode.")],
         filters=[lambda v: v.strip() if isinstance(v, str) else v],
     )
-    aadhaar_number = StringField(
-        "Aadhaar number",
-        validators=[DataRequired(), Regexp(r"^\d{12}$",
-                    message="Must be a 12-digit number.")],
-        filters=[lambda v: "".join(ch for ch in v if ch.isdigit())
-                 if isinstance(v, str) else v],
-    )
-    pan_number = StringField(
-        "PAN number",
-        validators=[DataRequired(), Regexp(r"^[A-Z]{5}[0-9]{4}[A-Z]$",
-                    message="Format: ABCDE1234F.")],
-        filters=[lambda v: v.strip().upper() if isinstance(v, str) else v],
-    )
-    bank_holder = StringField(
-        "Account holder name",
-        validators=[DataRequired(), Length(max=80)],
-        filters=[lambda v: v.strip() if isinstance(v, str) else v],
-    )
-    bank_account = StringField(
-        "Account number",
-        validators=[DataRequired(), Regexp(r"^\d{9,18}$",
-                    message="9 to 18 digits.")],
-        filters=[lambda v: "".join(ch for ch in v if ch.isdigit())
-                 if isinstance(v, str) else v],
-    )
-    bank_ifsc = StringField(
-        "IFSC",
-        validators=[DataRequired(), Regexp(r"^[A-Z]{4}0[A-Z0-9]{6}$",
-                    message="11-character IFSC, e.g. SBIN0001234.")],
-        filters=[lambda v: v.strip().upper() if isinstance(v, str) else v],
-    )
     categories = SelectMultipleField(
         "Service categories",
         choices=SERVICE_CATEGORIES,
@@ -412,15 +416,33 @@ class ProviderProfileForm(FlaskForm):
         validators=[Optional(), Length(max=200)],
         filters=[lambda v: v.strip() if isinstance(v, str) else v],
     )
-    years_experience = IntegerField(
-        "Years of experience",
-        validators=[DataRequired(), NumberRange(min=0, max=60)],
-    )
     service_pincodes = StringField(
         "Service-area pincodes (comma separated)",
         validators=[DataRequired(), _validate_service_pincodes],
         filters=[lambda v: v.strip() if isinstance(v, str) else v],
     )
+
+    # Account details — optional, fillable post-approval
+    bank_holder = StringField(
+        "Account holder name",
+        validators=[Optional(), Length(max=80)],
+        filters=[lambda v: v.strip() if isinstance(v, str) else v],
+    )
+    bank_account = StringField(
+        "Account number",
+        validators=[Optional(), Regexp(r"^\d{9,18}$",
+                    message="9 to 18 digits.")],
+        filters=[lambda v: "".join(ch for ch in v if ch.isdigit())
+                 if isinstance(v, str) else v],
+    )
+    bank_ifsc = StringField(
+        "IFSC",
+        validators=[Optional(), Regexp(r"^[A-Z]{4}0[A-Z0-9]{6}$",
+                    message="11-character IFSC, e.g. SBIN0001234.")],
+        filters=[lambda v: v.strip().upper() if isinstance(v, str) else v],
+    )
+
+    # Bio
     bio = TextAreaField(
         "Short bio",
         validators=[DataRequired(), Length(max=500)],
@@ -688,11 +710,8 @@ def _register_routes(app: Flask) -> None:
         return _current_user(), None
 
     def _editable_or_redirect(user):
-        if user["status"] in ("pending", "approved"):
-            msg = ("Your application is locked while under review."
-                   if user["status"] == "pending"
-                   else "Your application is approved — contact support to update.")
-            flash(msg, "error")
+        if user["status"] == "pending":
+            flash("Your application is locked while under review.", "error")
             return redirect(url_for("dashboard_provider"))
         return None
 
@@ -710,6 +729,8 @@ def _register_routes(app: Flask) -> None:
         if request.method == "GET" and existing:
             form.dob.data = (date.fromisoformat(existing["dob"])
                              if existing["dob"] else None)
+            form.gender.data = existing["gender"]
+            form.job_role.data = existing["job_role"]
             form.address_street.data = existing["address_street"]
             form.address_city.data = existing["address_city"]
             form.address_state.data = existing["address_state"]
@@ -734,13 +755,17 @@ def _register_routes(app: Flask) -> None:
             db = _get_db()
             db.execute(
                 "INSERT INTO provider_profiles ("
-                "  user_id, dob, address_street, address_city, address_state,"
-                "  address_pincode, aadhaar_number, pan_number, bank_holder,"
+                "  user_id, dob, gender, job_role,"
+                "  address_street, address_city, address_state, address_pincode,"
+                "  aadhaar_number, pan_number, bank_holder,"
                 "  bank_account, bank_ifsc, categories_json, sub_skills,"
                 "  years_experience, service_pincodes_json, bio, updated_at"
-                ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)"
+                ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP)"
                 "ON CONFLICT(user_id) DO UPDATE SET"
-                "  dob=excluded.dob, address_street=excluded.address_street,"
+                "  dob=excluded.dob,"
+                "  gender=excluded.gender,"
+                "  job_role=excluded.job_role,"
+                "  address_street=excluded.address_street,"
                 "  address_city=excluded.address_city,"
                 "  address_state=excluded.address_state,"
                 "  address_pincode=excluded.address_pincode,"
@@ -758,11 +783,15 @@ def _register_routes(app: Flask) -> None:
                 (
                     user["id"],
                     form.dob.data.isoformat() if form.dob.data else None,
+                    form.gender.data,
+                    form.job_role.data,
                     form.address_street.data, form.address_city.data,
                     form.address_state.data, form.address_pincode.data,
                     form.aadhaar_number.data, form.pan_number.data,
-                    form.bank_holder.data, form.bank_account.data,
-                    form.bank_ifsc.data, json.dumps(cats),
+                    form.bank_holder.data or None,
+                    form.bank_account.data or None,
+                    form.bank_ifsc.data or None,
+                    json.dumps(cats),
                     form.sub_skills.data or None,
                     form.years_experience.data,
                     json.dumps(pincodes), form.bio.data,
@@ -832,13 +861,12 @@ def _register_routes(app: Flask) -> None:
             return redirect(url_for("provider_documents"))
 
         docs = _get_provider_docs_by_kind(user["id"])
-        required = _required_doc_kinds(profile)
         status = 400 if request.method == "POST" else 200
         return render_template(
             "provider/documents.html",
             docs_form=form, user=user, docs=docs,
-            required_kinds=required, doc_kinds=DOC_KINDS, doc_labels=DOC_LABELS,
-            trade_cert_required=_trade_cert_required(profile),
+            required_kinds=REQUIRED_DOC_KINDS,
+            doc_kinds=DOC_KINDS, doc_labels=DOC_LABELS,
         ), status
 
     @app.route("/provider/submit", methods=["POST"])
@@ -854,7 +882,7 @@ def _register_routes(app: Flask) -> None:
         if not _profile_complete(profile):
             flash("Complete your profile before submitting.", "error")
             return redirect(url_for("provider_profile"))
-        missing = _missing_docs(user["id"], profile)
+        missing = _missing_docs(user["id"])
         if missing:
             labels = ", ".join(DOC_LABELS[k] for k in missing)
             flash(f"Upload these documents first: {labels}.", "error")
@@ -1035,16 +1063,14 @@ def _register_routes(app: Flask) -> None:
         user = _current_user()
         profile = _get_provider_profile(user["id"])
         docs = _get_provider_docs_by_kind(user["id"])
-        required = _required_doc_kinds(profile)
-        missing = [k for k in required if k not in docs]
+        missing = [k for k in REQUIRED_DOC_KINDS if k not in docs]
         return render_template(
             "dashboards/provider.html",
             user=user, profile=profile, docs=docs,
             doc_labels=DOC_LABELS,
             profile_complete=_profile_complete(profile),
             missing_docs=missing,
-            required_kinds=required,
-            trade_cert_required=_trade_cert_required(profile),
+            required_kinds=REQUIRED_DOC_KINDS,
             can_submit=_can_submit(user["id"], profile),
             categories=_decode_list(profile["categories_json"]) if profile else [],
             service_pincodes=(_decode_list(profile["service_pincodes_json"])
