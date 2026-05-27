@@ -31,6 +31,10 @@ html, body { height: 100%; }
 
 body {
     margin: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
     font-family: var(--font-sans);
     font-size: 16px;
     line-height: 1.5;
@@ -39,6 +43,9 @@ body {
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
 }
+
+main#main { flex: 1 0 auto; width: 100%; }
+.site-footer { flex: 0 0 auto; }
 
 img { max-width: 100%; display: block; }
 a { color: var(--brand-deep); }
@@ -488,9 +495,11 @@ a:hover { color: var(--brand); }
 /* --- Dashboard --- */
 .dashboard-page { background: var(--surface); }
 .dashboard {
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 24px 20px;
+    width: 100%;
+    padding: 24px 32px;
+}
+@media (max-width: 640px) {
+    .dashboard { padding: 20px 16px; }
 }
 .dashboard-header {
     display: flex;
@@ -706,9 +715,12 @@ a:hover { color: var(--brand); }
 /* --- Provider / admin shells --- */
 .provider-shell,
 .admin-shell {
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 24px 20px;
+    width: 100%;
+    padding: 24px 32px;
+}
+@media (max-width: 640px) {
+    .provider-shell,
+    .admin-shell { padding: 20px 16px; }
 }
 .provider-header,
 .admin-header {
