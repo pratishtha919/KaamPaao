@@ -709,7 +709,7 @@ Available skills (per `/reload-plugins`):
 
 - **Admin table** (`admin/providers_list.html`) is a 6-column HTML table. On very narrow phones it horizontal-scrolls. User accepted this for now but flagged it as a rough edge.
 - **No tests in repo.** All verification has been ad-hoc Flask test client scripts run from the CLI. There's no pytest setup.
-- **No git repo.** `git init` has not been run. This blocks Ultraplan and any GitHub-based tooling.
+- **Git remote uses SSH.** `git@github.com:pratishtha919/KaamPaao.git`. The user has their SSH keys set up. HTTPS pushes fail because there's no credential helper / no interactive prompt. If you ever see the https URL, switch it: `git remote set-url origin git@github.com:pratishtha919/KaamPaao.git`.
 - **Approved provider's profile edits don't trigger re-review.** If they change Aadhaar/PAN/etc. post-approval, admin doesn't see the change unless they re-open the detail page. The user is aware; out of scope for now.
 - **OTP for login on unregistered phones returns ok=True** (intentional, to avoid phone enumeration). The actual login attempt then fails with the generic error.
 - **No background-cleanup of OTP rows.** `otp.purge_expired()` exists but isn't called by anything. Rows accumulate forever.
