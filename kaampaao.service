@@ -1,0 +1,31 @@
+[Unit]
+Description=KaamPaao web service (Flask + gunicorn)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/user1/ai_code/KaamPaao
+EnvironmentFile=/home/user1/ai_code/KaamPaao/.env
+ExecStart=/home/user1/ai_code/KaamPaao/venv/bin/gunicorn \
+    --workers 2 \
+    --bind 127.0.0.1:5000 \
+    --access-logfile - \
+    --error-logfile - \
+    app:app
+Restart=on-failure
+RestartSec=3
+
+# When installing as a user service (no sudo needed):
+#   cp kaampaao.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now kaampaao.service
+#   loginctl enable-linger $USER   # optional: keep running after logout
+#
+# When installing as a system service (needs sudo, change WantedBy below to
+# multi-user.target and set User=/Group= explicitly):
+#   sudo cp kaampaao.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now kaampaao.service
+
+[Install]
+WantedBy=default.target
